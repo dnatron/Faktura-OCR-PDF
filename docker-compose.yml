@@ -1,0 +1,31 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: invoice-parser
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/app
+      - ./uploads:/app/uploads
+      - ./db:/app/db
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    restart: unless-stopped
+
+volumes:
+  ollama_data:

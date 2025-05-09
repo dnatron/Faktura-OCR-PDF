@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Výsledek zpracování - Faktura OCR PDF{% endblock %}
+
+{% block content %}
+<div class="result-container">
+    {% if processing %}
+    <div class="processing-status">
+        <h2>Zpracování faktury</h2>
+        <p>Soubor <strong>{{ upload.original_filename }}</strong> se zpracovává...</p>
+        
+        <div class="progress-container">
+            <div class="spinner"></div>
+            <p>Probíhá extrakce dat pomocí OCR a AI...</p>
+        </div>
+        
+        <div
+            id="result-status"
+            hx-get="/api/result/{{ upload.id }}"
+            hx-trigger="load delay:2s, every 5s"
+            hx-swap="none"
+            hx-on::after-request="if(event.detail.xhr.status === 200 && !event.detail.xhr.response.status) { window.location.reload(); }"
+        ></div>
+    </div>
+    {% else %}
+    <div class="result-data">
+        <h2>Výsledek zpracování faktury</h2>
+        
+        <div class="result-header">
+            <div class="result-file-info">
+                <h3>Informace o souboru</h3>
+                <p><strong>Název souboru:</strong> {{ upload.original_filename }}</p>
+                <p><strong>Datum nahrání:</strong> {{ upload.upload_date.strftime('%d.%m.%Y %H:%M') }}</p>
+                <p><strong>Zpracováno:</strong> {{ result.processed_date.strftime('%d.%m.%Y %H:%M') }}</p>
+                <p><strong>Použitý model:</strong> {{ result.llm_model_used }}</p>
+                <p><strong>Skóre spolehlivosti:</strong> {{ "%.2f"|format(result.confidence_score * 100) }}%</p>
+            </div>
+            
+            <div class="result-actions">
+                <a href="/uploads" class="btn">Zpět na seznam</a>
+                <button 
+                    class="btn btn-secondary"
+                    hx-post="/process/{{ upload.id }}"
+                    hx-swap="none"
+                    hx-indicator="#loading-reprocess"
+                    hx-on::after-request="window.location.reload();"
+                >
+                    Zpracovat znovu
+                </button>
+                <div id="loading-reprocess" class="htmx-indicator">
+                    <div class="spinner-small"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="invoice-data">
+            <h3>Extrahovaná data z faktury</h3>
+            
+            <div class="invoice-grid">
+                <div class="invoice-section">
+                    <h4>Základní údaje</h4>
+                    <table class="data-table">
+                        <tr>
+                            <th>Číslo faktury:</th>
+                            <td>{{ result.invoice_number or "Nenalezeno" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Datum vystavení:</th>
+                            <td>{{ result.invoice_date.strftime('%d.%m.%Y') if result.invoice_date else "Nenalezeno" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Datum splatnosti:</th>
+                            <td>{{ result.due_date.strftime('%d.%m.%Y') if result.due_date else "Nenalezeno" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Celková částka:</th>
+                            <td>{{ "%.2f"|format(result.total_amount) }} {{ result.currency or "" }}</td>
+                        </tr>
+                        <tr>
+                            <th>DPH:</th>
+                            <td>{{ "%.2f"|format(result.vat_amount) if result.vat_amount else "Nenalezeno" }} {{ result.currency or "" }}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="invoice-section">
+                    <h4>Dodavatel</h4>
+                    <table class="data-table">
+                        <tr>
+                            <th>Název:</th>
+                            <td>{{ result.supplier_name or "Nenalezeno" }}</td>
+                        </tr>
+                        <tr>
+                            <th>IČO:</th>
+                            <td>{{ result.supplier_tax_id or "Nenalezeno" }}</td>
+                        </tr>
+                        <tr>
+                            <th>DIČ:</th>
+                            <td>{{ result.supplier_vat_id or "Nenalezeno" }}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="invoice-section">
+                    <h4>Odběratel</h4>
+                    <table class="data-table">
+                        <tr>
+                            <th>Název:</th>
+                            <td>{{ result.customer_name or "Nenalezeno" }}</td>
+                        </tr>
+                        <tr>
+                            <th>IČO:</th>
+                            <td>{{ result.customer_tax_id or "Nenalezeno" }}</td>
+                        </tr>
+                        <tr>
+                            <th>DIČ:</th>
+                            <td>{{ result.customer_vat_id or "Nenalezeno" }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            {% if result.raw_text %}
+            <div class="raw-text-container">
+                <h4>Extrahovaný text</h4>
+                <details>
+                    <summary>Zobrazit extrahovaný text</summary>
+                    <pre class="raw-text">{{ result.raw_text }}</pre>
+                </details>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add any additional JavaScript for the result page
+    });
+</script>
+{% endblock %}

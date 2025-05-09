@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Nahrát fakturu - Faktura OCR PDF{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <h2>Nahrát fakturu</h2>
+    
+    <div class="upload-form">
+        <form 
+            id="upload-form"
+            hx-post="/upload"
+            hx-encoding="multipart/form-data"
+            hx-indicator="#loading"
+            hx-target="#result-container"
+            hx-swap="innerHTML"
+        >
+            <div class="form-group">
+                <label for="file">Vyberte PDF soubor nebo obrázek faktury:</label>
+                <input type="file" id="file" name="file" accept=".pdf,image/*" required>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Nahrát a zpracovat</button>
+                <div id="loading" class="htmx-indicator">
+                    <div class="spinner"></div>
+                    <span>Nahrávání...</span>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <div id="result-container"></div>
+    
+    {% if uploads %}
+    <div class="uploads-list">
+        <h3>Nahrané faktury</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Název souboru</th>
+                    <th>Datum nahrání</th>
+                    <th>Stav</th>
+                    <th>Akce</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for upload in uploads %}
+                <tr>
+                    <td>{{ upload.original_filename }}</td>
+                    <td>{{ upload.upload_date.strftime('%d.%m.%Y %H:%M') }}</td>
+                    <td>{{ "Zpracováno" if upload.processed else "Čeká na zpracování" }}</td>
+                    <td>
+                        <a href="/result/{{ upload.id }}" class="btn btn-small">Zobrazit</a>
+                        <button 
+                            class="btn btn-small btn-secondary"
+                            hx-post="/process/{{ upload.id }}"
+                            hx-swap="none"
+                            hx-indicator="#loading-{{ upload.id }}"
+                        >
+                            Zpracovat znovu
+                        </button>
+                        <div id="loading-{{ upload.id }}" class="htmx-indicator">
+                            <div class="spinner-small"></div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add any additional JavaScript for the upload page
+    });
+</script>
+{% endblock %}
