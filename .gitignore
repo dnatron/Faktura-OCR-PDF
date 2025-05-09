@@ -1,0 +1,44 @@
+# Ignorované soubory a adresáře pro Python projekt
+
+# Python bytecode
+__pycache__/
+routers/__pycache__/
+models/__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribuční adresáře
+dist/
+build/
+*.egg-info/
+
+# Virtuální prostředí
+venv/
+env/
+ENV/
+
+# Databáze SQLite
+*.db
+*.sqlite3
+db/invoice_parser.db
+
+# Lokální konfigurační soubory
+.env
+.env.local
+
+# Logy
+*.log
+
+# Soubory IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Dočasné soubory
+.DS_Store
+Thumbs.db
+
+# Nahrané soubory
+uploads/*
+!uploads/.gitkeep

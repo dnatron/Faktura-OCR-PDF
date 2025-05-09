@@ -1,64 +1,68 @@
-from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
-import logging
-from pathlib import Path
+# Hlavní soubor aplikace pro zpracování faktur pomocí OCR a AI
 
-# Import routers
-from routers import upload, result
+# Import potřebných knihoven
+from fastapi import FastAPI  # Framework pro vytvoření API
+from fastapi.staticfiles import StaticFiles  # Pro obsluhu statických souborů (CSS, JS)
+from fastapi.middleware.cors import CORSMiddleware  # Pro povolení CORS
+import logging  # Pro logování událostí
+from pathlib import Path  # Pro práci s cestami k souborům
 
-# Import database
-from database import create_db_and_tables
+# Import routerů (směrovačů) pro různé části aplikace
+from routers import upload, result  # upload.py - nahrávání souborů, result.py - zpracování a výsledky
 
-# Configure logging
+# Import funkcí pro práci s databází
+from database import create_db_and_tables  # Funkce pro vytvoření databáze a tabulek
+
+# Konfigurace logování - nastavení formátu a místa ukládání logů
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO,  # Úroveň logování - INFO a vyšší
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Formát logů
     handlers=[
-        logging.FileHandler("app.log"),
-        logging.StreamHandler()
+        logging.FileHandler("app.log"),  # Logy se ukládají do souboru app.log
+        logging.StreamHandler()  # Logy se také vypisují do konzole
     ]
 )
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)  # Vytvoření loggeru pro tento soubor
 
-# Create FastAPI app
+# Vytvoření FastAPI aplikace s metadaty
 app = FastAPI(
-    title="Faktura OCR PDF",
-    description="API pro zpracování faktur pomocí OCR a AI",
-    version="1.0.0"
+    title="Faktura OCR PDF",  # Název aplikace
+    description="API pro zpracování faktur pomocí OCR a AI",  # Popis aplikace
+    version="1.0.0"  # Verze aplikace
 )
 
-# Add CORS middleware
+# Přidání CORS middleware - umožňuje přístup k API z jiných domén
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["*"],  # Povolení přístupu ze všech domén (v produkci by mělo být omezeno)
+    allow_credentials=True,  # Povolení předávání cookies
+    allow_methods=["*"],  # Povolení všech HTTP metod (GET, POST, atd.)
+    allow_headers=["*"],  # Povolení všech HTTP hlaviček
 )
 
-# Mount static files
+# Připojení statických souborů (CSS, JS, obrázky) - budou dostupné na URL /static
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Include routers
-app.include_router(upload.router)
-app.include_router(result.router)
+# Připojení routerů (směrovačů) pro různé části aplikace
+app.include_router(upload.router)  # Router pro nahrávání souborů
+app.include_router(result.router)  # Router pro zpracování a výsledky
 
-# Create uploads directory if it doesn't exist
-UPLOAD_DIR = Path("uploads")
-UPLOAD_DIR.mkdir(exist_ok=True)
+# Vytvoření adresáře pro nahrané soubory, pokud neexistuje
+UPLOAD_DIR = Path("uploads")  # Cesta k adresáři
+UPLOAD_DIR.mkdir(exist_ok=True)  # Vytvoření adresáře (pokud již existuje, nic se nestane)
 
-# Create database and tables on startup
-@app.on_event("startup")
+# Vytvoření databáze a tabulek při startu aplikace
+@app.on_event("startup")  # Dekorátor pro událost startu aplikace
 def on_startup():
-    create_db_and_tables()
-    logger.info("Application started")
+    create_db_and_tables()  # Vytvoření databáze a tabulek
+    logger.info("Aplikace byla spuštěna")  # Záznam do logu
 
-@app.on_event("shutdown")
+# Akce při vypnutí aplikace
+@app.on_event("shutdown")  # Dekorátor pro událost vypnutí aplikace
 def on_shutdown():
-    logger.info("Application shutdown")
+    logger.info("Aplikace byla vypnuta")  # Záznam do logu
 
-# Healthcheck endpoint
-@app.get("/health")
+# Endpoint pro kontrolu zdraví aplikace (healthcheck)
+@app.get("/health")  # Dekorátor pro HTTP GET požadavek na URL /health
 async def health_check():
-    return {"status": "ok"}
+    return {"status": "ok"}  # Vrátí JSON s informací o stavu aplikace
