@@ -42,3 +42,6 @@ Thumbs.db
 # Nahrané soubory
 uploads/*
 !uploads/.gitkeep
+
+# Helper Files
+Helper-Files/
