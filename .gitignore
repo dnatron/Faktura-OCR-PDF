@@ -1,9 +1,7 @@
 # Ignorované soubory a adresáře pro Python projekt
 
 # Python bytecode
-__pycache__/
-routers/__pycache__/
-models/__pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 
